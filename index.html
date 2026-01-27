@@ -1,1 +1,537 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentHome - ศูนย์รวมบ้านเช่าและที่พัก</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
+        
+        body { font-family: 'Sarabun', sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        #map-picker, #map-display { height: 250px; width: 100%; border-radius: 1rem; z-index: 10; }
+        
+        .image-slot {
+            aspect-ratio: 1/1;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+        .image-slot img { width: 100%; height: 100%; object-cover: cover; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex justify-center items-center p-0 md:p-4">
 
+    <!-- Main Mobile-Friendly Container -->
+    <div class="w-full max-w-md bg-white shadow-xl h-screen md:h-[90vh] md:rounded-3xl overflow-hidden relative flex flex-col border border-slate-200" id="app">
+        
+        <!-- ================= VIEW: HOME ================= -->
+        <div id="view-home" class="view h-full flex flex-col bg-slate-50">
+            <header class="bg-white px-5 pt-6 pb-4 shadow-sm z-20">
+                <div class="flex justify-between items-center mb-3">
+                    <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <div class="bg-indigo-600 p-2 rounded-xl text-white">
+                            <i data-lucide="home" width="24" height="24"></i>
+                        </div>
+                        <span>RentHome</span>
+                    </h1>
+                    <button onclick="fetchPosts()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                        <i data-lucide="refresh-cw" width="20"></i>
+                    </button>
+                </div>
+                
+                <!-- Search & Filters -->
+                <div class="space-y-2 mb-4">
+                    <!-- Text Search -->
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-3 text-slate-400" width="18"></i>
+                        <input type="text" id="search-input" placeholder="ค้นหาชื่อโครงการ, ทำเล..." class="w-full pl-10 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                    </div>
+
+                    <!-- Advance Filters: Province & Price -->
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <select id="filter-province" onchange="renderHome()" class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 appearance-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">ทุกจังหวัด</option>
+                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                                <option value="เชียงใหม่">เชียงใหม่</option>
+                                <option value="ภูเก็ต">ภูเก็ต</option>
+                                <option value="ชลบุรี">ชลบุรี</option>
+                                <option value="ขอนแก่น">ขอนแก่น</option>
+                                <option value="นครราชสีมา">นครราชสีมา</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                            <i data-lucide="map-pin" class="absolute left-3 top-2.5 text-indigo-500" width="14"></i>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-3 text-slate-400 pointer-events-none" width="12"></i>
+                        </div>
+                        <div class="relative w-1/3">
+                            <input type="number" id="filter-price-max" oninput="renderHome()" placeholder="งบสูงสุด" class="w-full pl-8 pr-2 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">฿</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Type Tags -->
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="type-filters">
+                    <!-- Dynamic Filters -->
+                </div>
+            </header>
+
+            <div id="post-list" class="flex-1 overflow-y-auto p-4 space-y-4 pb-24 relative">
+                <!-- Content injected via JS -->
+            </div>
+
+            <!-- FAB -->
+            <button onclick="router.navigate('create')" class="absolute bottom-8 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
+                <i data-lucide="plus" width="28"></i>
+            </button>
+        </div>
+
+        <!-- ================= VIEW: DETAIL ================= -->
+        <div id="view-detail" class="view h-full flex flex-col bg-white hidden overflow-y-auto">
+            <div id="detail-content"></div>
+        </div>
+
+        <!-- ================= VIEW: CREATE ================= -->
+        <div id="view-create" class="view h-full flex flex-col bg-slate-50 hidden">
+            <header class="bg-white px-4 py-4 shadow-sm flex items-center gap-3 border-b border-slate-100">
+                <button onclick="router.back()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="chevron-left" class="text-slate-600"></i>
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">ลงประกาศบ้านเช่า</h2>
+            </header>
+
+            <form id="create-form" class="flex-1 overflow-y-auto p-5 space-y-6 pb-10">
+                <!-- Image Upload (3 Slots) -->
+                <div class="space-y-3">
+                    <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i data-lucide="camera" width="18" class="text-indigo-600"></i>
+                        รูปภาพที่พัก (สูงสุด 3 รูป)
+                    </label>
+                    <div class="grid grid-cols-3 gap-3" id="image-slots-container">
+                        <div class="image-slot" id="slot-0" onclick="triggerFileInput(0)">
+                            <i data-lucide="image-plus" class="text-slate-300"></i>
+                            <input type="file" id="file-0" accept="image/*" class="hidden" onchange="handleFile(event, 0)">
+                        </div>
+                        <div class="image-slot" id="slot-1" onclick="triggerFileInput(1)">
+                            <i data-lucide="image-plus" class="text-slate-300"></i>
+                            <input type="file" id="file-1" accept="image/*" class="hidden" onchange="handleFile(event, 1)">
+                        </div>
+                        <div class="image-slot" id="slot-2" onclick="triggerFileInput(2)">
+                            <i data-lucide="image-plus" class="text-slate-300"></i>
+                            <input type="file" id="file-2" accept="image/*" class="hidden" onchange="handleFile(event, 2)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Section -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">หัวข้อประกาศ / ชื่อบ้าน</label>
+                        <input required name="title" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="เช่น บ้านเดี่ยว 2 ชั้น ใกล้ MRT">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block">ประเภท</label>
+                            <select name="type" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none">
+                                <option>บ้านเดี่ยว</option>
+                                <option>คอนโด</option>
+                                <option>ทาวน์โฮม</option>
+                                <option>หอพัก/อพาร์ทเม้นท์</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block">จังหวัด</label>
+                            <select name="province" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none appearance-none">
+                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                                <option value="เชียงใหม่">เชียงใหม่</option>
+                                <option value="ภูเก็ต">ภูเก็ต</option>
+                                <option value="ชลบุรี">ชลบุรี</option>
+                                <option value="ขอนแก่น">ขอนแก่น</option>
+                                <option value="นครราชสีมา">นครราชสีมา</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">ค่าเช่า (บาท/เดือน)</label>
+                        <input required name="price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">เบอร์โทรศัพท์ติดต่อ</label>
+                        <input required name="phone" type="tel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="08X-XXX-XXXX">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1.5 block text-indigo-600">ปักหมุดตำแหน่งที่ตั้ง</label>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" id="map-search-input" placeholder="ค้นหาสถานที่ใกล้เคียง..." class="flex-1 bg-slate-100 border-none rounded-xl p-2.5 text-xs outline-none focus:ring-1 focus:ring-indigo-500">
+                            <button type="button" onclick="searchAddress()" class="bg-indigo-600 text-white px-4 rounded-xl text-xs font-bold">ค้นหา</button>
+                        </div>
+                        <div id="map-picker"></div>
+                        <p class="text-[10px] text-slate-400 mt-2 text-center">แตะที่แผนที่เพื่อเปลี่ยนจุดปักหมุด</p>
+                        <input type="hidden" name="lat" id="form-lat">
+                        <input type="hidden" name="lng" id="form-lng">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">รายละเอียดอื่นๆ</label>
+                        <textarea name="description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none" placeholder="เช่น จำนวนห้องนอน, เครื่องใช้ไฟฟ้า, เงื่อนไขการมัดจำ..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-100 active:scale-95 transition-all">
+                    ยืนยันการลงประกาศ
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const GAS_API_URL = ''; // ใส่ URL ของคุณที่นี่
+        let state = {
+            posts: [],
+            currentView: 'home',
+            images: [null, null, null],
+            pickerMap: null,
+            pickerMarker: null,
+            filterType: 'ทั้งหมด'
+        };
+
+        const propertyTypes = ['ทั้งหมด', 'บ้านเดี่ยว', 'คอนโด', 'ทาวน์โฮม', 'หอพัก/อพาร์ทเม้นท์'];
+        
+        // Spinner HTML Constant
+        const LOADING_SPINNER_HTML = `
+            <div id="loading-spinner" class="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
+                <div class="loader"></div>
+                <p class="text-xs">กำลังหาที่พักให้คุณ...</p>
+            </div>
+        `;
+
+        // --- ROUTER ---
+        const router = {
+            navigate: (viewId, data = null) => {
+                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+                const targetView = document.getElementById(`view-${viewId}`);
+                if (targetView) targetView.classList.remove('hidden');
+                state.currentView = viewId;
+                
+                if(viewId === 'create') initMapPicker();
+                if(viewId === 'detail') renderDetail(data);
+                if(viewId === 'home') renderHome();
+                
+                lucide.createIcons();
+            },
+            back: () => router.navigate('home')
+        };
+
+        // --- MAP PICKER LOGIC ---
+        function initMapPicker() {
+            setTimeout(() => {
+                if(state.pickerMap) state.pickerMap.remove();
+                
+                const defaultPos = [13.7563, 100.5018]; // BKK
+                state.pickerMap = L.map('map-picker').setView(defaultPos, 13);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(state.pickerMap);
+
+                state.pickerMarker = L.marker(defaultPos, {draggable: false}).addTo(state.pickerMap);
+                setFormCoords(defaultPos[0], defaultPos[1]);
+
+                state.pickerMap.on('click', function(e) {
+                    const {lat, lng} = e.latlng;
+                    state.pickerMarker.setLatLng([lat, lng]);
+                    setFormCoords(lat, lng);
+                });
+            }, 100);
+        }
+
+        async function searchAddress() {
+            const query = document.getElementById('map-search-input').value;
+            if(!query) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if(data.length > 0) {
+                    const {lat, lon} = data[0];
+                    const pos = [parseFloat(lat), parseFloat(lon)];
+                    state.pickerMap.setView(pos, 15);
+                    state.pickerMarker.setLatLng(pos);
+                    setFormCoords(lat, lon);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function setFormCoords(lat, lng) {
+            document.getElementById('form-lat').value = lat;
+            document.getElementById('form-lng').value = lng;
+        }
+
+        // --- IMAGE HANDLING ---
+        function triggerFileInput(index) {
+            document.getElementById(`file-${index}`).click();
+        }
+
+        function handleFile(event, index) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+                state.images[index] = base64;
+                const slot = document.getElementById(`slot-${index}`);
+                slot.innerHTML = `<img src="${base64}" class="w-full h-full object-cover">
+                                 <button type="button" onclick="removeImage(event, ${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-md">
+                                    <i data-lucide="x" width="12" height="12"></i>
+                                 </button>`;
+                lucide.createIcons();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(e, index) {
+            e.stopPropagation();
+            state.images[index] = null;
+            const slot = document.getElementById(`slot-${index}`);
+            slot.innerHTML = `<i data-lucide="image-plus" class="text-slate-300"></i>
+                             <input type="file" id="file-${index}" accept="image/*" class="hidden" onchange="handleFile(event, ${index})">`;
+            lucide.createIcons();
+        }
+
+        // --- DATA MOCK & RENDER ---
+        async function fetchPosts() {
+            // Use innerHTML to show spinner instead of class manipulation on possibly non-existent element
+            const list = document.getElementById('post-list');
+            list.innerHTML = LOADING_SPINNER_HTML;
+
+            // จำลองข้อมูลพร้อมจังหวัด
+            setTimeout(() => {
+                state.posts = [
+                    {
+                        id: 1, title: 'บ้านสวนรีสอร์ท ร่มรื่นสุดๆ', type: 'บ้านเดี่ยว', price: 12000, province: 'กรุงเทพมหานคร',
+                        images: ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=400'], 
+                        lat: 13.7, lng: 100.5, phone: '0812345678', description: 'ใกล้วงเวียนใหญ่'
+                    },
+                    {
+                        id: 2, title: 'คอนโดหรู ใจกลางนิมมาน', type: 'คอนโด', price: 8500, province: 'เชียงใหม่',
+                        images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400'], 
+                        lat: 18.79, lng: 98.98, phone: '0899999999', description: 'วิวสวย ตกแต่งครบ พร้อมอยู่'
+                    }
+                ];
+                renderHome(); // This will overwrite the spinner with content
+            }, 1000);
+        }
+
+        function renderHome() {
+            const list = document.getElementById('post-list');
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+            const filterProvince = document.getElementById('filter-province').value;
+            const filterMaxPrice = document.getElementById('filter-price-max').value;
+            
+            // Render Type Buttons
+            const filters = document.getElementById('type-filters');
+            filters.innerHTML = propertyTypes.map(t => `
+                <button onclick="state.filterType='${t}'; renderHome();" class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${state.filterType === t ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 border border-slate-200'}">
+                    ${t}
+                </button>
+            `).join('');
+
+            // Filtering Logic
+            const filtered = state.posts.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(searchText) || (p.description && p.description.toLowerCase().includes(searchText));
+                const matchesType = state.filterType === 'ทั้งหมด' || p.type === state.filterType;
+                const matchesProvince = filterProvince === '' || p.province === filterProvince;
+                const matchesPrice = !filterMaxPrice || p.price <= parseInt(filterMaxPrice);
+
+                return matchesSearch && matchesType && matchesProvince && matchesPrice;
+            });
+
+            if(filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-slate-400 mt-10">
+                        <i data-lucide="search-x" width="48" class="mb-2 opacity-50"></i>
+                        <p>ไม่พบที่พักที่คุณค้นหา</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = filtered.map(p => `
+                    <div onclick="router.navigate('detail', ${p.id})" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden fade-in group cursor-pointer">
+                        <div class="h-48 bg-slate-200 relative overflow-hidden">
+                            <img src="${p.images[0] || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            <div class="absolute top-3 left-3 flex gap-1">
+                                <span class="bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                    ${p.type}
+                                </span>
+                                <span class="bg-slate-800/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                    <i data-lucide="map-pin" width="10"></i> ${p.province}
+                                </span>
+                            </div>
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent h-16"></div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-slate-800 text-lg mb-1 line-clamp-1">${p.title}</h3>
+                            <div class="flex items-end justify-between">
+                                <p class="text-indigo-600 font-bold text-xl">฿${p.price.toLocaleString()}<span class="text-xs text-slate-400 font-normal"> /เดือน</span></p>
+                                <button class="bg-indigo-50 text-indigo-600 p-2 rounded-full hover:bg-indigo-100 transition-colors">
+                                    <i data-lucide="chevron-right" width="18"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderDetail(postId) {
+            const post = state.posts.find(p => p.id == postId);
+            if(!post) return router.back();
+
+            const container = document.getElementById('detail-content');
+            const sliderHtml = post.images.filter(img => img).map(img => `
+                <div class="min-w-full h-full"><img src="${img}" class="w-full h-full object-cover"></div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="relative h-72 bg-slate-200 group">
+                    <button onclick="router.back()" class="absolute top-4 left-4 z-20 bg-white/90 p-2 rounded-full shadow-lg hover:bg-white transition-colors"><i data-lucide="arrow-left" width="20"></i></button>
+                    <div class="flex overflow-x-auto h-full scrollbar-hide snap-x snap-mandatory">
+                        ${sliderHtml || '<div class="w-full h-full flex items-center justify-center text-slate-400">ไม่มีรูปภาพ</div>'}
+                    </div>
+                    ${post.images.length > 1 ? '<div class="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-sm">เลื่อนดูรูปภาพ</div>' : ''}
+                </div>
+                
+                <div class="p-6 space-y-6">
+                    <div>
+                        <div class="flex gap-2 mb-2">
+                            <div class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-2 py-1 rounded w-fit">${post.type}</div>
+                            <div class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded w-fit flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${post.province}</div>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-800 leading-tight">${post.title}</h2>
+                        <p class="text-2xl font-bold text-indigo-600 mt-2">฿${post.price.toLocaleString()}<span class="text-sm font-normal text-slate-400"> /เดือน</span></p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="file-text" width="16" class="text-indigo-500"></i> รายละเอียด</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">${post.description || 'ไม่มีข้อมูลเพิ่มเติม'}</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="map" width="16" class="text-indigo-500"></i> ตำแหน่งที่ตั้ง</h3>
+                        <div id="map-display" class="border border-slate-200"></div>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${post.lat},${post.lng}" target="_blank" class="w-full bg-white border border-slate-200 text-slate-700 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
+                            <i data-lucide="navigation" width="14"></i> นำทางด้วย Google Maps
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sticky bottom-0 bg-white p-4 border-t flex gap-3 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] safe-area-bottom">
+                    <a href="tel:${post.phone}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+                        <i data-lucide="phone-call" width="18"></i> โทรติดต่อ
+                    </a>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const map = L.map('map-display').setView([post.lat, post.lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                L.marker([post.lat, post.lng]).addTo(map);
+            }, 200);
+            
+            lucide.createIcons();
+        }
+
+        // --- SUBMIT ---
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader w-5 h-5 border-t-white border-white/30 mr-2 inline-block align-middle"></div> กำลังบันทึก...`;
+
+            const formData = new FormData(e.target);
+            const newPost = {
+                id: Date.now(),
+                title: formData.get('title'),
+                type: formData.get('type'),
+                province: formData.get('province'),
+                price: parseFloat(formData.get('price')),
+                phone: formData.get('phone'),
+                lat: parseFloat(formData.get('lat')),
+                lng: parseFloat(formData.get('lng')),
+                description: formData.get('description'),
+                images: [...state.images]
+            };
+
+            // หากต่อจริงให้ใช้ fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(newPost) })
+            console.log("Saving post:", newPost);
+            
+            // Simulate Delay
+            await new Promise(r => setTimeout(r, 1000));
+            
+            state.posts.unshift(newPost);
+
+            await Swal.fire({
+                title: 'ลงประกาศสำเร็จ!',
+                text: 'ข้อมูลที่พักของคุณถูกบันทึกเรียบร้อยแล้ว',
+                icon: 'success',
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'ตกลง'
+            });
+            
+            e.target.reset();
+            state.images = [null, null, null];
+            btn.disabled = false;
+            btn.innerText = originalText;
+            router.navigate('home');
+        });
+
+        // Initialize Search
+        document.getElementById('search-input').addEventListener('input', renderHome);
+
+        // Start
+        window.onload = () => {
+            fetchPosts();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
