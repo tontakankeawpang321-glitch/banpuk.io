@@ -78,26 +78,30 @@
                         <input type="text" id="search-input" placeholder="ค้นหาชื่อโครงการ, ทำเล..." class="w-full pl-10 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
                     </div>
 
-                    <!-- Advance Filters: Province & Price -->
+                    <!-- Advance Filters: Province & District -->
                     <div class="flex gap-2">
+                        <!-- Province Filter -->
                         <div class="relative flex-1">
-                            <select id="filter-province" onchange="renderHome()" class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 appearance-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <select id="filter-province" onchange="handleProvinceChange('filter')" class="w-full pl-8 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 appearance-none focus:ring-2 focus:ring-indigo-500 outline-none truncate">
                                 <option value="">ทุกจังหวัด</option>
-                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
-                                <option value="เชียงใหม่">เชียงใหม่</option>
-                                <option value="ภูเก็ต">ภูเก็ต</option>
-                                <option value="ชลบุรี">ชลบุรี</option>
-                                <option value="ขอนแก่น">ขอนแก่น</option>
-                                <option value="นครราชสีมา">นครราชสีมา</option>
-                                <option value="อื่นๆ">อื่นๆ</option>
+                                <!-- JS will populate provinces -->
                             </select>
-                            <i data-lucide="map-pin" class="absolute left-3 top-2.5 text-indigo-500" width="14"></i>
-                            <i data-lucide="chevron-down" class="absolute right-3 top-3 text-slate-400 pointer-events-none" width="12"></i>
+                            <i data-lucide="map" class="absolute left-2.5 top-2.5 text-indigo-500" width="14"></i>
                         </div>
-                        <div class="relative w-1/3">
-                            <input type="number" id="filter-price-max" oninput="renderHome()" placeholder="งบสูงสุด" class="w-full pl-8 pr-2 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">฿</span>
+
+                        <!-- District Filter -->
+                        <div class="relative flex-1">
+                            <select id="filter-amphoe" onchange="renderHome()" class="w-full pl-8 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 appearance-none focus:ring-2 focus:ring-indigo-500 outline-none truncate">
+                                <option value="">ทุกอำเภอ</option>
+                            </select>
+                            <i data-lucide="map-pin" class="absolute left-2.5 top-2.5 text-slate-400" width="14"></i>
                         </div>
+                    </div>
+
+                     <!-- Price Filter -->
+                    <div class="relative w-full">
+                        <input type="number" id="filter-price-max" oninput="renderHome()" placeholder="งบประมาณสูงสุด (บาท)" class="w-full pl-8 pr-2 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <span class="absolute left-3 top-2.5 text-slate-400 text-xs">฿</span>
                     </div>
                 </div>
 
@@ -120,6 +124,36 @@
         <!-- ================= VIEW: DETAIL ================= -->
         <div id="view-detail" class="view h-full flex flex-col bg-white hidden overflow-y-auto">
             <div id="detail-content"></div>
+        </div>
+
+        <!-- ================= VIEW: CHAT ================= -->
+        <div id="view-chat" class="view h-full flex flex-col bg-slate-50 hidden relative">
+            <header class="bg-white px-4 py-3 flex items-center gap-3 shadow-sm sticky top-0 z-10 border-b border-slate-100">
+                <button onclick="router.back()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="chevron-left" class="text-slate-600"></i>
+                </button>
+                <div class="flex items-center gap-3 flex-1">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
+                        <img id="chat-avatar" src="" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h3 id="chat-title" class="font-bold text-slate-800 text-sm leading-tight"></h3>
+                        <p class="text-[10px] text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ออนไลน์</p>
+                    </div>
+                </div>
+            </header>
+            
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 pb-4">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <div class="p-3 bg-white border-t border-slate-100 safe-area-bottom">
+                <form onsubmit="sendMessage(event)" class="flex items-center gap-2">
+                    <button type="button" class="p-2 text-slate-400 hover:text-indigo-500 transition-colors"><i data-lucide="plus-circle" width="24"></i></button>
+                    <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." class="flex-1 bg-slate-100 border-none rounded-full px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none">
+                    <button type="submit" class="p-2.5 bg-indigo-600 text-white rounded-full shadow-md active:scale-95 transition-all"><i data-lucide="send" width="18"></i></button>
+                </form>
+            </div>
         </div>
 
         <!-- ================= VIEW: CREATE ================= -->
@@ -169,30 +203,43 @@
                                 <option>คอนโด</option>
                                 <option>ทาวน์โฮม</option>
                                 <option>หอพัก/อพาร์ทเม้นท์</option>
+                                <option>รีสอร์ท</option>
                             </select>
                         </div>
                         <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block">ค่าเช่า (บาท/เดือน)</label>
+                            <input required name="price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                        </div>
+                    </div>
+
+                    <!-- Location: Province & District (Dropdown) -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
                             <label class="text-xs font-bold text-slate-500 mb-1.5 block">จังหวัด</label>
-                            <select name="province" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none appearance-none">
-                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
-                                <option value="เชียงใหม่">เชียงใหม่</option>
-                                <option value="ภูเก็ต">ภูเก็ต</option>
-                                <option value="ชลบุรี">ชลบุรี</option>
-                                <option value="ขอนแก่น">ขอนแก่น</option>
-                                <option value="นครราชสีมา">นครราชสีมา</option>
-                                <option value="อื่นๆ">อื่นๆ</option>
+                            <select name="province" id="create-province" onchange="handleProvinceChange('create')" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none appearance-none">
+                                <option value="">เลือกจังหวัด</option>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block">อำเภอ/เขต</label>
+                            <select name="amphoe" id="create-amphoe" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none appearance-none">
+                                <option value="">เลือกอำเภอ</option>
+                                <!-- Populated by JS -->
                             </select>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">ค่าเช่า (บาท/เดือน)</label>
-                        <input required name="price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-slate-500 mb-1.5 block">เบอร์โทรศัพท์ติดต่อ</label>
-                        <input required name="phone" type="tel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="08X-XXX-XXXX">
+                    <!-- Contact -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block">เบอร์โทรศัพท์</label>
+                            <input required name="phone" type="tel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="08X-XXX-XXXX">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-1.5 block text-green-600">LINE ID</label>
+                            <input name="lineId" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="ไอดีไลน์">
+                        </div>
                     </div>
 
                     <div>
@@ -223,19 +270,39 @@
 
     <script>
         // --- CONFIG & STATE ---
-        const GAS_API_URL = ''; // ใส่ URL ของคุณที่นี่
+        const GAS_API_URL = ''; 
         let state = {
             posts: [],
             currentView: 'home',
             images: [null, null, null],
             pickerMap: null,
             pickerMarker: null,
-            filterType: 'ทั้งหมด'
+            filterType: 'ทั้งหมด',
+            selectedPost: null,
+            chatMessages: []
         };
 
-        const propertyTypes = ['ทั้งหมด', 'บ้านเดี่ยว', 'คอนโด', 'ทาวน์โฮม', 'หอพัก/อพาร์ทเม้นท์'];
+        const propertyTypes = ['ทั้งหมด', 'บ้านเดี่ยว', 'คอนโด', 'ทาวน์โฮม', 'หอพัก/อพาร์ทเม้นท์', 'รีสอร์ท'];
         
-        // Spinner HTML Constant
+        // Complete Province List (77 Provinces sorted)
+        const allProvinces = [
+            "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
+        ];
+
+        // Districts for major provinces (Example data - In a real app, this would be a full JSON database)
+        // For other provinces, we will auto-generate a generic "Muang" district for functionality.
+        const districtsData = {
+            "กรุงเทพมหานคร": ["พระนคร", "ดุสิต", "หนองจอก", "บางรัก", "บางเขน", "บางกะปิ", "ปทุมวัน", "พระโขนง", "มีนบุรี", "ลาดกระบัง", "ยานนาวา", "สัมพันธวงศ์", "พญาไท", "ธนบุรี", "บางกอกใหญ่", "ห้วยขวาง", "คลองสาน", "ตลิ่งชัน", "บางกอกน้อย", "บางขุนเทียน", "ภาษีเจริญ", "หนองแขม", "ราษฎร์บูรณะ", "บางพลัด", "ดินแดง", "บึงกุ่ม", "สาทร", "บางซื่อ", "จตุจักร", "บางคอแหลม", "ประเวศ", "คลองเตย", "สวนหลวง", "จอมทอง", "ดอนเมือง", "ราชเทวี", "ลาดพร้าว", "วัฒนา", "บางแค", "หลักสี่", "สายไหม", "คันนายาว", "สะพานสูง", "วังทองหลาง", "คลองสามวา", "บางนา", "ทวีวัฒนา", "ทุ่งครุ", "บางบอน"],
+            "เชียงใหม่": ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"],
+            "ภูเก็ต": ["เมืองภูเก็ต", "กะทู้", "ถลาง"],
+            "ชลบุรี": ["เมืองชลบุรี", "บ้านบึง", "หนองใหญ่", "บางละมุง", "พานทอง", "พนัสนิคม", "ศรีราชา", "เกาะสีชัง", "สัตหีบ", "บ่อทอง", "เกาะจันทร์"],
+            "ขอนแก่น": ["เมืองขอนแก่น", "บ้านฝาง", "พระยืน", "หนองเรือ", "ชุมแพ", "สีชมพู", "น้ำพอง", "อุบลรัตน์", "กระนวน", "บ้านไผ่", "เปือยน้อย", "เมืองพล", "แวงใหญ่", "แวงน้อย", "หนองสองห้อง", "ภูเวียง", "มัญจาคีรี", "ชนบท", "เขาสวนกวาง", "ภูผาม่าน", "ซำสูง", "โคกโพธิ์ไชย", "หนองนาคำ", "บ้านแฮด", "โนนศิลา", "เวียงเก่า"],
+            "นครราชสีมา": ["เมืองนครราชสีมา", "ครบุรี", "เสิงสาง", "คง", "บ้านเหลื่อม", "จักราช", "โชคชัย", "ด่านขุนทด", "โนนไทย", "โนนสูง", "ขามสะแกแสง", "บัวใหญ่", "ประทาย", "ปักธงชัย", "พิมาย", "ห้วยแถลง", "ชุมพวง", "สูงเนิน", "ขามทะเลสอ", "สีคิ้ว", "ปากช่อง", "หนองบุญมาก", "แก้งสนามนาง", "โนนแดง", "วังน้ำเขียว", "เทพารักษ์", "เมืองยาง", "พระทองคำ", "ลำทะเมนชัย", "บัวลาย", "สีดา", "เฉลิมพระเกียรติ"],
+            "นนทบุรี": ["เมืองนนทบุรี", "บางกรวย", "บางใหญ่", "บางบัวทอง", "ไทรน้อย", "ปากเกร็ด"],
+            "ปทุมธานี": ["เมืองปทุมธานี", "คลองหลวง", "ธัญบุรี", "หนองเสือ", "ลาดหลุมแก้ว", "ลำลูกกา", "สามโคก"],
+            "สมุทรปราการ": ["เมืองสมุทรปราการ", "บางบ่อ", "บางพลี", "พระประแดง", "พระสมุทรเจดีย์", "บางเสาธง"]
+        };
+
         const LOADING_SPINNER_HTML = `
             <div id="loading-spinner" class="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
                 <div class="loader"></div>
@@ -253,11 +320,15 @@
                 
                 if(viewId === 'create') initMapPicker();
                 if(viewId === 'detail') renderDetail(data);
+                if(viewId === 'chat') initChat(data);
                 if(viewId === 'home') renderHome();
                 
                 lucide.createIcons();
             },
-            back: () => router.navigate('home')
+            back: () => {
+                if(state.currentView === 'chat') router.navigate('detail', state.selectedPost.id);
+                else router.navigate('home');
+            }
         };
 
         // --- MAP PICKER LOGIC ---
@@ -336,27 +407,70 @@
             lucide.createIcons();
         }
 
-        // --- DATA MOCK & RENDER ---
+        // --- DATA & LOGIC ---
+
+        function populateProvinceSelects() {
+            const filterSelect = document.getElementById('filter-province');
+            const createSelect = document.getElementById('create-province');
+            
+            // Keep default options
+            const filterDefault = '<option value="">ทุกจังหวัด</option>';
+            const createDefault = '<option value="">เลือกจังหวัด</option>';
+
+            // Generate options HTML
+            const optionsHtml = allProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            filterSelect.innerHTML = filterDefault + optionsHtml;
+            createSelect.innerHTML = createDefault + optionsHtml;
+        }
+
+        // Update district dropdown based on province
+        function handleProvinceChange(context) {
+            const provinceSelect = document.getElementById(context === 'filter' ? 'filter-province' : 'create-province');
+            const amphoeSelect = document.getElementById(context === 'filter' ? 'filter-amphoe' : 'create-amphoe');
+            
+            const selectedProvince = provinceSelect.value;
+            let districts = districtsData[selectedProvince] || [];
+
+            // Fallback for provinces without explicit district data in this demo
+            if (districts.length === 0 && selectedProvince) {
+                districts = ["เมือง" + selectedProvince, "อำเภออื่นๆ"];
+            }
+
+            const defaultOption = context === 'filter' ? 'ทุกอำเภอ' : 'เลือกอำเภอ';
+            amphoeSelect.innerHTML = `<option value="">${defaultOption}</option>`;
+            
+            districts.forEach(d => {
+                amphoeSelect.innerHTML += `<option value="${d}">${d}</option>`;
+            });
+
+            if (context === 'filter') renderHome();
+        }
+
         async function fetchPosts() {
-            // Use innerHTML to show spinner instead of class manipulation on possibly non-existent element
             const list = document.getElementById('post-list');
             list.innerHTML = LOADING_SPINNER_HTML;
 
-            // จำลองข้อมูลพร้อมจังหวัด
+            // Mock Data
             setTimeout(() => {
                 state.posts = [
                     {
-                        id: 1, title: 'บ้านสวนรีสอร์ท ร่มรื่นสุดๆ', type: 'บ้านเดี่ยว', price: 12000, province: 'กรุงเทพมหานคร',
+                        id: 1, title: 'บ้านสวนรีสอร์ท ร่มรื่นสุดๆ', type: 'บ้านเดี่ยว', price: 12000, province: 'กรุงเทพมหานคร', amphoe: 'บางเขน',
                         images: ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=400'], 
-                        lat: 13.7, lng: 100.5, phone: '0812345678', description: 'ใกล้วงเวียนใหญ่'
+                        lat: 13.8, lng: 100.6, phone: '0812345678', lineId: 'home123', description: 'ใกล้วงเวียนบางเขน'
                     },
                     {
-                        id: 2, title: 'คอนโดหรู ใจกลางนิมมาน', type: 'คอนโด', price: 8500, province: 'เชียงใหม่',
+                        id: 2, title: 'คอนโดหรู ใจกลางนิมมาน', type: 'คอนโด', price: 8500, province: 'เชียงใหม่', amphoe: 'เมืองเชียงใหม่',
                         images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400'], 
-                        lat: 18.79, lng: 98.98, phone: '0899999999', description: 'วิวสวย ตกแต่งครบ พร้อมอยู่'
+                        lat: 18.79, lng: 98.98, phone: '0899999999', lineId: '', description: 'วิวสวย ตกแต่งครบ พร้อมอยู่'
+                    },
+                    {
+                        id: 3, title: 'วิลล่า ภูเก็ต ซีวิว', type: 'รีสอร์ท', price: 45000, province: 'ภูเก็ต', amphoe: 'กะทู้',
+                        images: ['https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=400'], 
+                        lat: 7.89, lng: 98.39, phone: '076123456', lineId: 'phuketvilla', description: 'ติดหาด ป่าตอง'
                     }
                 ];
-                renderHome(); // This will overwrite the spinner with content
+                renderHome();
             }, 1000);
         }
 
@@ -364,6 +478,7 @@
             const list = document.getElementById('post-list');
             const searchText = document.getElementById('search-input').value.toLowerCase();
             const filterProvince = document.getElementById('filter-province').value;
+            const filterAmphoe = document.getElementById('filter-amphoe').value;
             const filterMaxPrice = document.getElementById('filter-price-max').value;
             
             // Render Type Buttons
@@ -379,9 +494,10 @@
                 const matchesSearch = p.title.toLowerCase().includes(searchText) || (p.description && p.description.toLowerCase().includes(searchText));
                 const matchesType = state.filterType === 'ทั้งหมด' || p.type === state.filterType;
                 const matchesProvince = filterProvince === '' || p.province === filterProvince;
+                const matchesAmphoe = filterAmphoe === '' || (p.amphoe && p.amphoe === filterAmphoe);
                 const matchesPrice = !filterMaxPrice || p.price <= parseInt(filterMaxPrice);
 
-                return matchesSearch && matchesType && matchesProvince && matchesPrice;
+                return matchesSearch && matchesType && matchesProvince && matchesAmphoe && matchesPrice;
             });
 
             if(filtered.length === 0) {
@@ -396,12 +512,12 @@
                     <div onclick="router.navigate('detail', ${p.id})" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden fade-in group cursor-pointer">
                         <div class="h-48 bg-slate-200 relative overflow-hidden">
                             <img src="${p.images[0] || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                            <div class="absolute top-3 left-3 flex gap-1">
+                            <div class="absolute top-3 left-3 flex gap-1 flex-wrap pr-3">
                                 <span class="bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
                                     ${p.type}
                                 </span>
                                 <span class="bg-slate-800/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                    <i data-lucide="map-pin" width="10"></i> ${p.province}
+                                    <i data-lucide="map-pin" width="10"></i> ${p.amphoe ? p.amphoe + ', ' : ''}${p.province}
                                 </span>
                             </div>
                             <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent h-16"></div>
@@ -424,6 +540,7 @@
         function renderDetail(postId) {
             const post = state.posts.find(p => p.id == postId);
             if(!post) return router.back();
+            state.selectedPost = post;
 
             const container = document.getElementById('detail-content');
             const sliderHtml = post.images.filter(img => img).map(img => `
@@ -443,7 +560,7 @@
                     <div>
                         <div class="flex gap-2 mb-2">
                             <div class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-2 py-1 rounded w-fit">${post.type}</div>
-                            <div class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded w-fit flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${post.province}</div>
+                            <div class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded w-fit flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${post.amphoe ? post.amphoe + ', ' : ''}${post.province}</div>
                         </div>
                         <h2 class="text-2xl font-bold text-slate-800 leading-tight">${post.title}</h2>
                         <p class="text-2xl font-bold text-indigo-600 mt-2">฿${post.price.toLocaleString()}<span class="text-sm font-normal text-slate-400"> /เดือน</span></p>
@@ -452,6 +569,11 @@
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="file-text" width="16" class="text-indigo-500"></i> รายละเอียด</h3>
                         <p class="text-sm text-slate-600 leading-relaxed">${post.description || 'ไม่มีข้อมูลเพิ่มเติม'}</p>
+                        ${post.lineId ? `
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-200 mt-2">
+                            <i data-lucide="message-circle" class="text-green-500" width="16"></i>
+                            <span class="text-sm text-slate-600">Line ID: <span class="font-bold text-slate-800">${post.lineId}</span></span>
+                        </div>` : ''}
                     </div>
 
                     <div class="space-y-3">
@@ -465,8 +587,15 @@
 
                 <div class="sticky bottom-0 bg-white p-4 border-t flex gap-3 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] safe-area-bottom">
                     <a href="tel:${post.phone}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
-                        <i data-lucide="phone-call" width="18"></i> โทรติดต่อ
+                        <i data-lucide="phone-call" width="18"></i> โทร
                     </a>
+                    ${post.lineId ? `
+                    <a href="https://line.me/ti/p/~${post.lineId}" target="_blank" class="flex-1 bg-[#06C755] text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-200 active:scale-95 transition-all">
+                        <i data-lucide="message-circle" width="18"></i> LINE
+                    </a>` : ''}
+                    <button onclick="router.navigate('chat', ${post.id})" class="flex-1 bg-slate-800 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-slate-300 active:scale-95 transition-all">
+                        <i data-lucide="message-square" width="18"></i> แชท
+                    </button>
                 </div>
             `;
 
@@ -477,6 +606,65 @@
             }, 200);
             
             lucide.createIcons();
+        }
+
+        // --- CHAT LOGIC ---
+        function initChat(post) {
+            state.selectedPost = typeof post === 'object' ? post : state.posts.find(p => p.id == post);
+            
+            document.getElementById('chat-title').innerText = state.selectedPost.title;
+            document.getElementById('chat-avatar').src = state.selectedPost.images[0] || 'https://via.placeholder.com/100';
+            
+            // Mock Messages
+            state.chatMessages = [
+                { id: 1, sender: 'system', text: 'สวัสดีครับ สนใจสอบถามข้อมูลเพิ่มเติมได้เลยครับ', time: '10:00' }
+            ];
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = state.chatMessages.map(msg => `
+                <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] px-4 py-2 text-sm leading-relaxed shadow-sm ${
+                        msg.sender === 'user' 
+                        ? 'bg-indigo-600 text-white rounded-[18px] rounded-br-[4px]' 
+                        : 'bg-white text-slate-800 rounded-[18px] rounded-bl-[4px] border border-slate-100'
+                    }">
+                        ${msg.text}
+                        <div class="text-[9px] mt-1 text-right opacity-70">${msg.time}</div>
+                    </div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            // Add user message
+            state.chatMessages.push({
+                id: Date.now(),
+                sender: 'user',
+                text: text,
+                time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})
+            });
+            renderMessages();
+            input.value = '';
+
+            // Auto reply mock
+            setTimeout(() => {
+                state.chatMessages.push({
+                    id: Date.now()+1,
+                    sender: 'system',
+                    text: 'ขอบคุณที่สนใจครับ เดี๋ยวผมติดต่อกลับนะครับ',
+                    time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})
+                });
+                renderMessages();
+            }, 1500);
         }
 
         // --- SUBMIT ---
@@ -493,8 +681,10 @@
                 title: formData.get('title'),
                 type: formData.get('type'),
                 province: formData.get('province'),
+                amphoe: formData.get('amphoe'),
                 price: parseFloat(formData.get('price')),
                 phone: formData.get('phone'),
+                lineId: formData.get('lineId'),
                 lat: parseFloat(formData.get('lat')),
                 lng: parseFloat(formData.get('lng')),
                 description: formData.get('description'),
@@ -529,6 +719,7 @@
 
         // Start
         window.onload = () => {
+            populateProvinceSelects();
             fetchPosts();
             lucide.createIcons();
         };
