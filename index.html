@@ -34,7 +34,7 @@
             overflow: hidden;
             position: relative;
         }
-        .image-slot img { width: 100%; height: 100%; object-cover: cover; }
+        .image-slot img { width: 100%; height: 100%; object-fit: cover; }
         
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -290,13 +290,10 @@
 
         const propertyTypes = ['ทั้งหมด', 'บ้านเดี่ยว', 'คอนโด', 'ทาวน์โฮม', 'หอพัก/อพาร์ทเม้นท์', 'รีสอร์ท'];
         
-        // Complete Province List (77 Provinces sorted)
         const allProvinces = [
             "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
         ];
 
-        // Districts for major provinces (Example data - In a real app, this would be a full JSON database)
-        // For other provinces, we will auto-generate a generic "Muang" district for functionality.
         const districtsData = {
             "กรุงเทพมหานคร": ["พระนคร", "ดุสิต", "หนองจอก", "บางรัก", "บางเขน", "บางกะปิ", "ปทุมวัน", "พระโขนง", "มีนบุรี", "ลาดกระบัง", "ยานนาวา", "สัมพันธวงศ์", "พญาไท", "ธนบุรี", "บางกอกใหญ่", "ห้วยขวาง", "คลองสาน", "ตลิ่งชัน", "บางกอกน้อย", "บางขุนเทียน", "ภาษีเจริญ", "หนองแขม", "ราษฎร์บูรณะ", "บางพลัด", "ดินแดง", "บึงกุ่ม", "สาทร", "บางซื่อ", "จตุจักร", "บางคอแหลม", "ประเวศ", "คลองเตย", "สวนหลวง", "จอมทอง", "ดอนเมือง", "ราชเทวี", "ลาดพร้าว", "วัฒนา", "บางแค", "หลักสี่", "สายไหม", "คันนายาว", "สะพานสูง", "วังทองหลาง", "คลองสามวา", "บางนา", "ทวีวัฒนา", "ทุ่งครุ", "บางบอน"],
             "เชียงใหม่": ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"],
@@ -341,17 +338,13 @@
         function initMapPicker() {
             setTimeout(() => {
                 if(state.pickerMap) state.pickerMap.remove();
-                
-                const defaultPos = [13.7563, 100.5018]; // BKK
+                const defaultPos = [13.7563, 100.5018];
                 state.pickerMap = L.map('map-picker').setView(defaultPos, 13);
-                
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap'
                 }).addTo(state.pickerMap);
-
                 state.pickerMarker = L.marker(defaultPos, {draggable: false}).addTo(state.pickerMap);
                 setFormCoords(defaultPos[0], defaultPos[1]);
-
                 state.pickerMap.on('click', function(e) {
                     const {lat, lng} = e.latlng;
                     state.pickerMarker.setLatLng([lat, lng]);
@@ -389,7 +382,6 @@
         function handleFile(event, index) {
             const file = event.target.files[0];
             if(!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 const base64 = e.target.result;
@@ -418,85 +410,56 @@
         function populateProvinceSelects() {
             const filterSelect = document.getElementById('filter-province');
             const createSelect = document.getElementById('create-province');
-            
-            // Keep default options
             const filterDefault = '<option value="">ทุกจังหวัด</option>';
             const createDefault = '<option value="">เลือกจังหวัด</option>';
-
-            // Generate options HTML
             const optionsHtml = allProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
-
             filterSelect.innerHTML = filterDefault + optionsHtml;
             createSelect.innerHTML = createDefault + optionsHtml;
         }
 
-        // Update district dropdown based on province
         function handleProvinceChange(context) {
             const provinceSelect = document.getElementById(context === 'filter' ? 'filter-province' : 'create-province');
             const amphoeSelect = document.getElementById(context === 'filter' ? 'filter-amphoe' : 'create-amphoe');
-            
             const selectedProvince = provinceSelect.value;
             let districts = districtsData[selectedProvince] || [];
-
-            // Fallback for provinces without explicit district data in this demo
             if (districts.length === 0 && selectedProvince) {
                 districts = ["เมือง" + selectedProvince, "อำเภออื่นๆ"];
             }
-
             const defaultOption = context === 'filter' ? 'ทุกอำเภอ' : 'เลือกอำเภอ';
             amphoeSelect.innerHTML = `<option value="">${defaultOption}</option>`;
-            
             districts.forEach(d => {
                 amphoeSelect.innerHTML += `<option value="${d}">${d}</option>`;
             });
-
             if (context === 'filter') renderHome();
         }
 
         async function fetchPosts() {
             const list = document.getElementById('post-list');
             list.innerHTML = LOADING_SPINNER_HTML;
-
             try {
-                // Try fetching real data first
-                const response = await fetch(GAS_API_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const result = await response.json();
-                
-                // Assuming result structure is { data: [...] } or just array [...]
-                let rawPosts = result.data || result;
-                if (!Array.isArray(rawPosts)) rawPosts = [];
+                const res = await fetch(GAS_API_URL);
+                const text = await res.text();      
+                const result = JSON.parse(text);    
+
+                const rawPosts = result.data || result;
+                if (!Array.isArray(rawPosts)) throw new Error('ข้อมูลไม่อยู่ในรูปแบบที่ถูกต้อง');
 
                 state.posts = rawPosts.map(p => ({
                     ...p,
+                    title: String(p.title || ""), // Defensive casting
+                    description: String(p.description || ""), // Defensive casting
                     price: parseFloat(p.price) || 0,
                     lat: parseFloat(p.lat) || 0,
                     lng: parseFloat(p.lng) || 0,
-                    images: p.images || []
+                    images: Array.isArray(p.images) ? p.images : []
                 }));
-                
-                if (state.posts.length === 0) throw new Error('No data');
                 renderHome();
-
             } catch (error) {
-                console.log("Using Mock Data due to:", error);
-                // Fallback Mock Data
+                console.error("Fetch failed:", error);
+                list.innerHTML = `<p class="text-center text-red-500 py-10">ดึงข้อมูลไม่สำเร็จ: ${error.message}</p>`;
+                // Fallback Mock Data on error
                 state.posts = [
-                    {
-                        id: 1, title: 'บ้านสวนรีสอร์ท ร่มรื่นสุดๆ', type: 'บ้านเดี่ยว', price: 12000, priceUnit: 'เดือน', province: 'กรุงเทพมหานคร', amphoe: 'บางเขน',
-                        images: ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=400'], 
-                        lat: 13.8, lng: 100.6, phone: '0812345678', lineId: 'home123', description: 'ใกล้วงเวียนบางเขน'
-                    },
-                    {
-                        id: 2, title: 'คอนโดหรู ใจกลางนิมมาน', type: 'คอนโด', price: 8500, priceUnit: 'เดือน', province: 'เชียงใหม่', amphoe: 'เมืองเชียงใหม่',
-                        images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400'], 
-                        lat: 18.79, lng: 98.98, phone: '0899999999', lineId: '', description: 'วิวสวย ตกแต่งครบ พร้อมอยู่'
-                    },
-                    {
-                        id: 3, title: 'วิลล่า ภูเก็ต ซีวิว', type: 'รีสอร์ท', price: 2500, priceUnit: 'วัน', province: 'ภูเก็ต', amphoe: 'กะทู้',
-                        images: ['https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=400'], 
-                        lat: 7.89, lng: 98.39, phone: '076123456', lineId: 'phuketvilla', description: 'ติดหาด ป่าตอง'
-                    }
+                    { id: 1, title: 'บ้านสวนรีสอร์ท ร่มรื่นสุดๆ', type: 'บ้านเดี่ยว', price: 12000, priceUnit: 'เดือน', province: 'กรุงเทพมหานคร', amphoe: 'บางเขน', images: ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=400'], lat: 13.8, lng: 100.6, phone: '0812345678', lineId: 'home123', description: 'ใกล้วงเวียนบางเขน' }
                 ];
                 renderHome();
             }
@@ -508,58 +471,48 @@
             const filterProvince = document.getElementById('filter-province').value;
             const filterAmphoe = document.getElementById('filter-amphoe').value;
             const filterMaxPrice = document.getElementById('filter-price-max').value;
-            
-            // Render Type Buttons
             const filters = document.getElementById('type-filters');
             filters.innerHTML = propertyTypes.map(t => `
                 <button onclick="state.filterType='${t}'; renderHome();" class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${state.filterType === t ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 border border-slate-200'}">
                     ${t}
                 </button>
             `).join('');
-
-            // Filtering Logic
+            
             const filtered = state.posts.filter(p => {
-                const matchesSearch = p.title.toLowerCase().includes(searchText) || (p.description && p.description.toLowerCase().includes(searchText));
-                const matchesType = state.filterType === 'ทั้งหมด' || p.type === state.filterType;
-                const matchesProvince = filterProvince === '' || p.province === filterProvince;
-                const matchesAmphoe = filterAmphoe === '' || (p.amphoe && p.amphoe === filterAmphoe);
-                const matchesPrice = !filterMaxPrice || p.price <= parseInt(filterMaxPrice);
+                // Cast properties to String before calling toLowerCase to prevent "is not a function" errors
+                const titleStr = String(p.title || "").toLowerCase();
+                const descStr = String(p.description || "").toLowerCase();
+                const typeStr = String(p.type || "");
+                const provStr = String(p.province || "");
+                const amphStr = String(p.amphoe || "");
 
+                const matchesSearch = titleStr.includes(searchText) || descStr.includes(searchText);
+                const matchesType = state.filterType === 'ทั้งหมด' || typeStr === state.filterType;
+                const matchesProvince = filterProvince === '' || provStr === filterProvince;
+                const matchesAmphoe = filterAmphoe === '' || amphStr === filterAmphoe;
+                const matchesPrice = !filterMaxPrice || p.price <= parseInt(filterMaxPrice);
+                
                 return matchesSearch && matchesType && matchesProvince && matchesAmphoe && matchesPrice;
             });
 
             if(filtered.length === 0) {
-                list.innerHTML = `
-                    <div class="flex flex-col items-center justify-center text-slate-400 mt-10">
-                        <i data-lucide="search-x" width="48" class="mb-2 opacity-50"></i>
-                        <p>ไม่พบที่พักที่คุณค้นหา</p>
-                    </div>
-                `;
+                list.innerHTML = `<div class="flex flex-col items-center justify-center text-slate-400 mt-10"><i data-lucide="search-x" width="48" class="mb-2 opacity-50"></i><p>ไม่พบที่พักที่คุณค้นหา</p></div>`;
             } else {
                 list.innerHTML = filtered.map(p => `
                     <div onclick="router.navigate('detail', ${p.id})" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden fade-in group cursor-pointer">
                         <div class="h-48 bg-slate-200 relative overflow-hidden">
                             <img src="${p.images[0] || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                             <div class="absolute top-3 left-3 flex gap-1 flex-wrap pr-3">
-                                <span class="bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                                    ${p.type}
-                                </span>
-                                <span class="bg-slate-800/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                    <i data-lucide="map-pin" width="10"></i> ${p.amphoe ? p.amphoe + ', ' : ''}${p.province}
-                                </span>
+                                <span class="bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">${p.type}</span>
+                                <span class="bg-slate-800/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${p.amphoe ? p.amphoe + ', ' : ''}${p.province}</span>
                             </div>
                             <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent h-16"></div>
                         </div>
                         <div class="p-4">
                             <h3 class="font-bold text-slate-800 text-lg mb-1 line-clamp-1">${p.title}</h3>
                             <div class="flex items-end justify-between">
-                                <div>
-                                    <p class="text-[10px] text-slate-400">เริ่มต้น</p>
-                                    <p class="text-indigo-600 font-bold text-xl">฿${p.price.toLocaleString()}<span class="text-xs text-slate-400 font-normal"> /${p.priceUnit || 'เดือน'}</span></p>
-                                </div>
-                                <button class="bg-indigo-50 text-indigo-600 p-2 rounded-full hover:bg-indigo-100 transition-colors">
-                                    <i data-lucide="chevron-right" width="18"></i>
-                                </button>
+                                <div><p class="text-[10px] text-slate-400">เริ่มต้น</p><p class="text-indigo-600 font-bold text-xl">฿${(p.price || 0).toLocaleString()}<span class="text-xs text-slate-400 font-normal"> /${p.priceUnit || 'เดือน'}</span></p></div>
+                                <button class="bg-indigo-50 text-indigo-600 p-2 rounded-full hover:bg-indigo-100 transition-colors"><i data-lucide="chevron-right" width="18"></i></button>
                             </div>
                         </div>
                     </div>
@@ -572,27 +525,15 @@
             const post = state.posts.find(p => p.id == postId);
             if(!post) return router.back();
             state.selectedPost = post;
-
             const container = document.getElementById('detail-content');
-            const sliderHtml = post.images.filter(img => img).map(img => `
-                <div class="min-w-full h-full"><img src="${img}" class="w-full h-full object-cover"></div>
-            `).join('');
-
+            const sliderHtml = post.images.filter(img => img).map(img => `<div class="min-w-full h-full"><img src="${img}" class="w-full h-full object-cover"></div>`).join('');
             container.innerHTML = `
                 <div class="relative h-72 bg-slate-200 group">
                     <button onclick="router.back()" class="absolute top-4 left-4 z-20 bg-white/90 p-2 rounded-full shadow-lg hover:bg-white transition-colors"><i data-lucide="arrow-left" width="20"></i></button>
-                    
-                    <!-- Delete Button -->
-                    <button onclick="deletePost('${post.id}')" class="absolute top-4 right-4 z-20 bg-red-500/90 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors backdrop-blur-sm">
-                        <i data-lucide="trash-2" width="20"></i>
-                    </button>
-
-                    <div class="flex overflow-x-auto h-full scrollbar-hide snap-x snap-mandatory">
-                        ${sliderHtml || '<div class="w-full h-full flex items-center justify-center text-slate-400">ไม่มีรูปภาพ</div>'}
-                    </div>
+                    <button onclick="deletePost('${post.id}')" class="absolute top-4 right-4 z-20 bg-red-500/90 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors backdrop-blur-sm"><i data-lucide="trash-2" width="20"></i></button>
+                    <div class="flex overflow-x-auto h-full scrollbar-hide snap-x snap-mandatory">${sliderHtml || '<div class="w-full h-full flex items-center justify-center text-slate-400">ไม่มีรูปภาพ</div>'}</div>
                     ${post.images.length > 1 ? '<div class="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-sm">เลื่อนดูรูปภาพ</div>' : ''}
                 </div>
-                
                 <div class="p-6 space-y-6">
                     <div>
                         <div class="flex gap-2 mb-2">
@@ -600,65 +541,38 @@
                             <div class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded w-fit flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${post.amphoe ? post.amphoe + ', ' : ''}${post.province}</div>
                         </div>
                         <h2 class="text-2xl font-bold text-slate-800 leading-tight">${post.title}</h2>
-                        <div class="mt-2">
-                            <p class="text-[10px] text-slate-400">ราคาเริ่มต้น</p>
-                            <p class="text-2xl font-bold text-indigo-600">฿${post.price.toLocaleString()}<span class="text-sm font-normal text-slate-400"> /${post.priceUnit || 'เดือน'}</span></p>
-                        </div>
+                        <div class="mt-2"><p class="text-[10px] text-slate-400">ราคาเริ่มต้น</p><p class="text-2xl font-bold text-indigo-600">฿${(post.price || 0).toLocaleString()}<span class="text-sm font-normal text-slate-400"> /${post.priceUnit || 'เดือน'}</span></p></div>
                     </div>
-
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="file-text" width="16" class="text-indigo-500"></i> รายละเอียด</h3>
                         <p class="text-sm text-slate-600 leading-relaxed">${post.description || 'ไม่มีข้อมูลเพิ่มเติม'}</p>
-                        ${post.lineId ? `
-                        <div class="flex items-center gap-2 pt-2 border-t border-slate-200 mt-2">
-                            <i data-lucide="message-circle" class="text-green-500" width="16"></i>
-                            <span class="text-sm text-slate-600">Line ID: <span class="font-bold text-slate-800">${post.lineId}</span></span>
-                        </div>` : ''}
+                        ${post.lineId ? `<div class="flex items-center gap-2 pt-2 border-t border-slate-200 mt-2"><i data-lucide="message-circle" class="text-green-500" width="16"></i><span class="text-sm text-slate-600">Line ID: <span class="font-bold text-slate-800">${post.lineId}</span></span></div>` : ''}
                     </div>
-
                     <div class="space-y-3">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="map" width="16" class="text-indigo-500"></i> ตำแหน่งที่ตั้ง</h3>
                         <div id="map-display" class="border border-slate-200"></div>
-                        <a href="https://www.google.com/maps/search/?api=1&query=${post.lat},${post.lng}" target="_blank" class="w-full bg-white border border-slate-200 text-slate-700 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
-                            <i data-lucide="navigation" width="14"></i> นำทางด้วย Google Maps
-                        </a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${post.lat},${post.lng}" target="_blank" class="w-full bg-white border border-slate-200 text-slate-700 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"><i data-lucide="navigation" width="14"></i> นำทางด้วย Google Maps</a>
                     </div>
                 </div>
-
                 <div class="sticky bottom-0 bg-white p-4 border-t flex gap-3 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] safe-area-bottom">
-                    <a href="tel:${post.phone}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
-                        <i data-lucide="phone-call" width="18"></i> โทร
-                    </a>
-                    ${post.lineId ? `
-                    <a href="https://line.me/ti/p/~${post.lineId}" target="_blank" class="flex-1 bg-[#06C755] text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-200 active:scale-95 transition-all">
-                        <i data-lucide="message-circle" width="18"></i> LINE
-                    </a>` : ''}
-                    <button onclick="router.navigate('chat', ${post.id})" class="flex-1 bg-slate-800 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-slate-300 active:scale-95 transition-all">
-                        <i data-lucide="message-square" width="18"></i> แชท
-                    </button>
+                    <a href="tel:${post.phone}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-95 transition-all"><i data-lucide="phone-call" width="18"></i> โทร</a>
+                    ${post.lineId ? `<a href="https://line.me/ti/p/~${post.lineId}" target="_blank" class="flex-1 bg-[#06C755] text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-200 active:scale-95 transition-all"><i data-lucide="message-circle" width="18"></i> LINE</a>` : ''}
+                    <button onclick="router.navigate('chat', ${post.id})" class="flex-1 bg-slate-800 text-white text-center py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-slate-300 active:scale-95 transition-all"><i data-lucide="message-square" width="18"></i> แชท</button>
                 </div>
             `;
-
             setTimeout(() => {
                 const map = L.map('map-display').setView([post.lat, post.lng], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                 L.marker([post.lat, post.lng]).addTo(map);
             }, 200);
-            
             lucide.createIcons();
         }
 
-        // --- CHAT LOGIC ---
         function initChat(post) {
             state.selectedPost = typeof post === 'object' ? post : state.posts.find(p => p.id == post);
-            
             document.getElementById('chat-title').innerText = state.selectedPost.title;
             document.getElementById('chat-avatar').src = state.selectedPost.images[0] || 'https://via.placeholder.com/100';
-            
-            // Mock Messages
-            state.chatMessages = [
-                { id: 1, sender: 'system', text: 'สวัสดีครับ สนใจสอบถามข้อมูลเพิ่มเติมได้เลยครับ', time: '10:00' }
-            ];
+            state.chatMessages = [{ id: 1, sender: 'system', text: 'สวัสดีครับ สนใจสอบถามข้อมูลเพิ่มเติมได้เลยครับ', time: '10:00' }];
             renderMessages();
         }
 
@@ -666,13 +580,8 @@
             const container = document.getElementById('chat-messages');
             container.innerHTML = state.chatMessages.map(msg => `
                 <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}">
-                    <div class="max-w-[80%] px-4 py-2 text-sm leading-relaxed shadow-sm ${
-                        msg.sender === 'user' 
-                        ? 'bg-indigo-600 text-white rounded-[18px] rounded-br-[4px]' 
-                        : 'bg-white text-slate-800 rounded-[18px] rounded-bl-[4px] border border-slate-100'
-                    }">
-                        ${msg.text}
-                        <div class="text-[9px] mt-1 text-right opacity-70">${msg.time}</div>
+                    <div class="max-w-[80%] px-4 py-2 text-sm leading-relaxed shadow-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-[18px] rounded-br-[4px]' : 'bg-white text-slate-800 rounded-[18px] rounded-bl-[4px] border border-slate-100'}">
+                        ${msg.text}<div class="text-[9px] mt-1 text-right opacity-70">${msg.time}</div>
                     </div>
                 </div>
             `).join('');
@@ -684,25 +593,11 @@
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
-
-            // Add user message
-            state.chatMessages.push({
-                id: Date.now(),
-                sender: 'user',
-                text: text,
-                time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})
-            });
+            state.chatMessages.push({ id: Date.now(), sender: 'user', text: text, time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) });
             renderMessages();
             input.value = '';
-
-            // Auto reply mock
             setTimeout(() => {
-                state.chatMessages.push({
-                    id: Date.now()+1,
-                    sender: 'system',
-                    text: 'ขอบคุณที่สนใจครับ เดี๋ยวผมติดต่อกลับนะครับ',
-                    time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})
-                });
+                state.chatMessages.push({ id: Date.now()+1, sender: 'system', text: 'ขอบคุณที่สนใจครับ เดี๋ยวผมติดต่อกลับนะครับ', time: new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) });
                 renderMessages();
             }, 1500);
         }
@@ -713,44 +608,23 @@
                 text: "ข้อมูลและรูปภาพใน Google Drive จะถูกลบถาวร!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444', // Red-500
-                cancelButtonColor: '#64748b', // Slate-500
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'ลบประกาศ',
                 cancelButtonText: 'ยกเลิก'
             });
 
             if (result.isConfirmed) {
-                // Show loading
-                Swal.fire({
-                    title: 'กำลังลบข้อมูล...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
+                Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
                 try {
-                    // Send delete request to GAS
                     await fetch(GAS_API_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: 'delete', id: id })
                     });
-
-                    // Remove from local state
                     state.posts = state.posts.filter(p => p.id != id);
-
-                    await Swal.fire({
-                        title: 'ลบสำเร็จ!',
-                        text: 'ประกาศถูกลบเรียบร้อยแล้ว',
-                        icon: 'success',
-                        confirmButtonText: 'ตกลง',
-                        confirmButtonColor: '#4f46e5'
-                    });
-
+                    await Swal.fire({ title: 'ลบสำเร็จ!', text: 'ประกาศถูกลบเรียบร้อยแล้ว', icon: 'success', confirmButtonText: 'ตกลง', confirmButtonColor: '#4f46e5' });
                     router.navigate('home');
-
                 } catch (error) {
                     console.error("Error deleting:", error);
                     await Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้', 'error');
@@ -758,14 +632,12 @@
             }
         }
 
-        // --- SUBMIT ---
         document.getElementById('create-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const originalText = btn.innerText;
             btn.disabled = true;
             btn.innerHTML = `<div class="loader w-5 h-5 border-t-white border-white/30 mr-2 inline-block align-middle"></div> กำลังบันทึก...`;
-
             const formData = new FormData(e.target);
             const newPost = {
                 id: Date.now(),
@@ -782,56 +654,33 @@
                 description: formData.get('description'),
                 images: [...state.images]
             };
-
             try {
-                // Fetch to real GAS endpoint
                 await fetch(GAS_API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Important for GAS Web App calls from client
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(newPost)
                 });
-
-                // Optimistic UI update (Add to local list immediately)
                 state.posts.unshift(newPost);
-
-                await Swal.fire({
-                    title: 'ลงประกาศสำเร็จ!',
-                    text: 'ข้อมูลที่พักของคุณถูกบันทึกเรียบร้อยแล้ว',
-                    icon: 'success',
-                    confirmButtonColor: '#4f46e5',
-                    confirmButtonText: 'ตกลง'
-                });
-                
+                await Swal.fire({ title: 'ลงประกาศสำเร็จ!', text: 'ข้อมูลที่พักของคุณถูกบันทึกเรียบร้อยแล้ว', icon: 'success', confirmButtonColor: '#4f46e5', confirmButtonText: 'ตกลง' });
                 e.target.reset();
                 state.images = [null, null, null];
-                // Reset image slots visual
                 document.querySelectorAll('.image-slot').forEach((slot, index) => {
                     slot.innerHTML = `<i data-lucide="image-plus" class="text-slate-300"></i><input type="file" id="file-${index}" accept="image/*" class="hidden" onchange="handleFile(event, ${index})">`;
                 });
                 lucide.createIcons();
-                
                 btn.disabled = false;
                 btn.innerText = originalText;
                 router.navigate('home');
-
             } catch (error) {
                 console.error("Error saving:", error);
-                await Swal.fire({
-                    title: 'เกิดข้อผิดพลาด!',
-                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-                    icon: 'error',
-                    confirmButtonText: 'ตกลง'
-                });
+                await Swal.fire({ title: 'เกิดข้อผิดพลาด!', text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', icon: 'error', confirmButtonText: 'ตกลง' });
                 btn.disabled = false;
                 btn.innerText = originalText;
             }
         });
 
-        // Initialize Search
         document.getElementById('search-input').addEventListener('input', renderHome);
 
-        // Start
         window.onload = () => {
             populateProvinceSelects();
             fetchPosts();
