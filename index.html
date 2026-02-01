@@ -452,8 +452,8 @@
                     lat: parseFloat(p.lat) || 0,
                     lng: parseFloat(p.lng) || 0,
                     images: Array.isArray(p.images)
-                        ? p.images
-                        : (typeof p.images === 'string' ? JSON.parse(p.images || '[]') : [])
+                        ? p.images.filter(Boolean)
+                        : (typeof p.images === 'string' ? JSON.parse(p.images || '[]').filter(Boolean) : [])
                 }));
                 renderHome();
             } catch (error) {
@@ -503,7 +503,7 @@
                 list.innerHTML = filtered.map(p => `
                     <div onclick="router.navigate('detail', ${p.id})" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden fade-in group cursor-pointer">
                         <div class="h-48 bg-slate-200 relative overflow-hidden">
-                            <img src="${p.images[0] || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            <img src="${p.images && p.images.length ? p.images[0] : ''}" onerror="this.onerror=null;this.src='https://via.placeholder.com/400?text=No+Image';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                             <div class="absolute top-3 left-3 flex gap-1 flex-wrap pr-3">
                                 <span class="bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">${p.type}</span>
                                 <span class="bg-slate-800/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1"><i data-lucide="map-pin" width="10"></i> ${p.amphoe ? p.amphoe + ', ' : ''}${p.province}</span>
@@ -662,7 +662,7 @@
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(newPost)
                 });
-                state.posts.unshift(newPost);
+                await fetchPosts();
                 await Swal.fire({ title: 'ลงประกาศสำเร็จ!', text: 'ข้อมูลที่พักของคุณถูกบันทึกเรียบร้อยแล้ว', icon: 'success', confirmButtonColor: '#4f46e5', confirmButtonText: 'ตกลง' });
                 e.target.reset();
                 state.images = [null, null, null];
