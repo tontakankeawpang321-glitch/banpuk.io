@@ -451,7 +451,9 @@
                     price: parseFloat(p.price) || 0,
                     lat: parseFloat(p.lat) || 0,
                     lng: parseFloat(p.lng) || 0,
-                    images: Array.isArray(p.images) ? p.images : []
+                    images: Array.isArray(p.images)
+                        ? p.images
+                        : (typeof p.images === 'string' ? JSON.parse(p.images || '[]') : [])
                 }));
                 renderHome();
             } catch (error) {
